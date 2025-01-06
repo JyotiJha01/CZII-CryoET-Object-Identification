@@ -1,0 +1,843 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "8c507200",
+   "metadata": {
+    "papermill": {
+     "duration": 0.003713,
+     "end_time": "2025-01-06T06:40:07.073500",
+     "exception": false,
+     "start_time": "2025-01-06T06:40:07.069787",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# CZII - CryoET YOLO11 Submission Baseline with KDTree\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "917a4ecb",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:40:07.080652Z",
+     "iopub.status.busy": "2025-01-06T06:40:07.080296Z",
+     "iopub.status.idle": "2025-01-06T06:41:06.772916Z",
+     "shell.execute_reply": "2025-01-06T06:41:06.772032Z"
+    },
+    "papermill": {
+     "duration": 59.69843,
+     "end_time": "2025-01-06T06:41:06.775177",
+     "exception": false,
+     "start_time": "2025-01-06T06:40:07.076747",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "./packages/\r\n",
+      "./packages/pandas-2.2.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/numpy-2.1.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/psutil-6.1.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/charset_normalizer-3.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/torch-2.5.1-cp310-cp310-manylinux1_x86_64.whl\r\n",
+      "./packages/matplotlib-3.9.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/tqdm-4.67.1-py3-none-any.whl\r\n",
+      "./packages/networkx-3.4.2-py3-none-any.whl\r\n",
+      "./packages/typing_extensions-4.12.2-py3-none-any.whl\r\n",
+      "./packages/fonttools-4.55.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/packaging-24.2-py3-none-any.whl\r\n",
+      "./packages/scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/pyparsing-3.2.0-py3-none-any.whl\r\n",
+      "./packages/nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/PyYAML-6.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/ultralytics_thop-2.0.12-py3-none-any.whl\r\n",
+      "./packages/certifi-2024.8.30-py3-none-any.whl\r\n",
+      "./packages/pillow-11.0.0-cp310-cp310-manylinux_2_28_x86_64.whl\r\n",
+      "./packages/nvidia_nccl_cu12-2.21.5-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/py_cpuinfo-9.0.0-py3-none-any.whl\r\n",
+      "./packages/ultralytics-8.3.40-py3-none-any.whl\r\n",
+      "./packages/torchvision-0.20.1-cp310-cp310-manylinux1_x86_64.whl\r\n",
+      "./packages/requests-2.32.3-py3-none-any.whl\r\n",
+      "./packages/nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/MarkupSafe-3.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/contourpy-1.3.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/sympy-1.13.1-py3-none-any.whl\r\n",
+      "./packages/seaborn-0.13.2-py3-none-any.whl\r\n",
+      "./packages/filelock-3.16.1-py3-none-any.whl\r\n",
+      "./packages/six-1.16.0-py2.py3-none-any.whl\r\n",
+      "./packages/opencv_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/urllib3-2.2.3-py3-none-any.whl\r\n",
+      "./packages/cycler-0.12.1-py3-none-any.whl\r\n",
+      "./packages/tzdata-2024.2-py2.py3-none-any.whl\r\n",
+      "./packages/nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/fsspec-2024.10.0-py3-none-any.whl\r\n",
+      "./packages/pytz-2024.2-py2.py3-none-any.whl\r\n",
+      "./packages/jinja2-3.1.4-py3-none-any.whl\r\n",
+      "./packages/triton-3.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\r\n",
+      "./packages/mpmath-1.3.0-py3-none-any.whl\r\n",
+      "./packages/nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/python_dateutil-2.9.0.post0-py2.py3-none-any.whl\r\n",
+      "./packages/nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl\r\n",
+      "./packages/idna-3.10-py3-none-any.whl\r\n",
+      "./packages/kiwisolver-1.4.7-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl\r\n",
+      "Looking in links: ./packages\r\n",
+      "Processing ./packages/ultralytics-8.3.40-py3-none-any.whl\r\n",
+      "Requirement already satisfied: numpy>=1.23.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (1.26.4)\r\n",
+      "Requirement already satisfied: matplotlib>=3.3.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (3.7.1)\r\n",
+      "Requirement already satisfied: opencv-python>=4.6.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (4.10.0.84)\r\n",
+      "Requirement already satisfied: pillow>=7.1.2 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (10.4.0)\r\n",
+      "Requirement already satisfied: pyyaml>=5.3.1 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (6.0.2)\r\n",
+      "Requirement already satisfied: requests>=2.23.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (2.32.3)\r\n",
+      "Requirement already satisfied: scipy>=1.4.1 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (1.13.1)\r\n",
+      "Requirement already satisfied: torch>=1.8.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (2.4.1+cu121)\r\n",
+      "Requirement already satisfied: torchvision>=0.9.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (0.19.1+cu121)\r\n",
+      "Requirement already satisfied: tqdm>=4.64.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (4.66.5)\r\n",
+      "Requirement already satisfied: psutil in /usr/local/lib/python3.10/dist-packages (from ultralytics) (5.9.5)\r\n",
+      "Requirement already satisfied: py-cpuinfo in /usr/local/lib/python3.10/dist-packages (from ultralytics) (9.0.0)\r\n",
+      "Requirement already satisfied: pandas>=1.1.4 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (2.1.4)\r\n",
+      "Requirement already satisfied: seaborn>=0.11.0 in /usr/local/lib/python3.10/dist-packages (from ultralytics) (0.12.2)\r\n",
+      "Processing ./packages/ultralytics_thop-2.0.12-py3-none-any.whl (from ultralytics)\r\n",
+      "Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (1.3.0)\r\n",
+      "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (0.12.1)\r\n",
+      "Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (4.53.1)\r\n",
+      "Requirement already satisfied: kiwisolver>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (1.4.7)\r\n",
+      "Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (24.1)\r\n",
+      "Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (3.1.4)\r\n",
+      "Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.3.0->ultralytics) (2.8.2)\r\n",
+      "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.10/dist-packages (from pandas>=1.1.4->ultralytics) (2024.2)\r\n",
+      "Requirement already satisfied: tzdata>=2022.1 in /usr/local/lib/python3.10/dist-packages (from pandas>=1.1.4->ultralytics) (2024.1)\r\n",
+      "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests>=2.23.0->ultralytics) (3.3.2)\r\n",
+      "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests>=2.23.0->ultralytics) (3.10)\r\n",
+      "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests>=2.23.0->ultralytics) (2.2.3)\r\n",
+      "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests>=2.23.0->ultralytics) (2024.8.30)\r\n",
+      "Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (3.16.1)\r\n",
+      "Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (4.12.2)\r\n",
+      "Requirement already satisfied: sympy in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (1.13.3)\r\n",
+      "Requirement already satisfied: networkx in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (3.3)\r\n",
+      "Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (3.1.4)\r\n",
+      "Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from torch>=1.8.0->ultralytics) (2024.6.1)\r\n",
+      "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.7->matplotlib>=3.3.0->ultralytics) (1.16.0)\r\n",
+      "Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.10/dist-packages (from jinja2->torch>=1.8.0->ultralytics) (2.1.5)\r\n",
+      "Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.10/dist-packages (from sympy->torch>=1.8.0->ultralytics) (1.3.0)\r\n",
+      "Installing collected packages: ultralytics-thop, ultralytics\r\n",
+      "Successfully installed ultralytics-8.3.40 ultralytics-thop-2.0.12\r\n",
+      "Processing ./wheel_file/asciitree-0.3.3/asciitree-0.3.3\r\n",
+      "  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\r\n",
+      "Building wheels for collected packages: asciitree\r\n",
+      "  Building wheel for asciitree (setup.py) ... \u001b[?25l\u001b[?25hdone\r\n",
+      "  Created wheel for asciitree: filename=asciitree-0.3.3-py3-none-any.whl size=5033 sha256=2ced257fe16fa2de2da98191bc6391a2f2c2e83d0a33cc08d5ebea3ef2f19f10\r\n",
+      "  Stored in directory: /root/.cache/pip/wheels/72/5f/18/c0251c9cff85c62eda5978bec3fd2e2bf68c30d9b89d523146\r\n",
+      "Successfully built asciitree\r\n",
+      "Installing collected packages: asciitree\r\n",
+      "Successfully installed asciitree-0.3.3\r\n",
+      "Looking in links: /kaggle/working/wheel_file\r\n",
+      "Processing ./wheel_file/zarr-2.18.3-py3-none-any.whl\r\n",
+      "Requirement already satisfied: asciitree in /usr/local/lib/python3.10/dist-packages (from zarr) (0.3.3)\r\n",
+      "Requirement already satisfied: numpy>=1.24 in /usr/local/lib/python3.10/dist-packages (from zarr) (1.26.4)\r\n",
+      "Processing ./wheel_file/numcodecs-0.13.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from zarr)\r\n",
+      "Processing ./wheel_file/fasteners-0.19-py3-none-any.whl (from zarr)\r\n",
+      "Installing collected packages: numcodecs, fasteners, zarr\r\n",
+      "Successfully installed fasteners-0.19 numcodecs-0.13.1 zarr-2.18.3\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "!tar xfvz /kaggle/input/ultralytics-for-offline-install/archive.tar.gz\n",
+    "!pip install --no-index --find-links=./packages ultralytics\n",
+    "!rm -rf ./packages\n",
+    "\n",
+    "!cp -r '/kaggle/input/hengck-czii-cryo-et-01/wheel_file' '/kaggle/working/'\n",
+    "!pip install /kaggle/working/wheel_file/asciitree-0.3.3/asciitree-0.3.3\n",
+    "!pip install --no-index --find-links=/kaggle/working/wheel_file zarr"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "41684b5f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:06.786143Z",
+     "iopub.status.busy": "2025-01-06T06:41:06.785860Z",
+     "iopub.status.idle": "2025-01-06T06:41:14.713961Z",
+     "shell.execute_reply": "2025-01-06T06:41:14.713264Z"
+    },
+    "papermill": {
+     "duration": 7.934983,
+     "end_time": "2025-01-06T06:41:14.715460",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:06.780477",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Creating new Ultralytics Settings v0.0.6 file ✅ \n",
+      "View Ultralytics Settings with 'yolo settings' or at '/root/.config/Ultralytics/settings.json'\n",
+      "Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/quickstart/#ultralytics-settings.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "import time\n",
+    "import sys\n",
+    "import warnings\n",
+    "import math\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import matplotlib.pyplot as plt\n",
+    "import cv2\n",
+    "import torch\n",
+    "from tqdm import tqdm\n",
+    "from ultralytics import YOLO\n",
+    "import zarr\n",
+    "from scipy.spatial import cKDTree\n",
+    "from collections import defaultdict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "217ebe25",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:14.726091Z",
+     "iopub.status.busy": "2025-01-06T06:41:14.725612Z",
+     "iopub.status.idle": "2025-01-06T06:41:15.821129Z",
+     "shell.execute_reply": "2025-01-06T06:41:15.820365Z"
+    },
+    "papermill": {
+     "duration": 1.10235,
+     "end_time": "2025-01-06T06:41:15.822725",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:14.720375",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model_path = '/kaggle/input/czii-yolo11-training-baseline-weight-and-others/runs/detect/train/weights/best.pt'\n",
+    "model = YOLO(model_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "3226fcd9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:15.833301Z",
+     "iopub.status.busy": "2025-01-06T06:41:15.833053Z",
+     "iopub.status.idle": "2025-01-06T06:41:15.867111Z",
+     "shell.execute_reply": "2025-01-06T06:41:15.866533Z"
+    },
+    "papermill": {
+     "duration": 0.040347,
+     "end_time": "2025-01-06T06:41:15.868328",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:15.827981",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "runs_path = '/kaggle/input/czii-cryo-et-object-identification/test/static/ExperimentRuns/*'\n",
+    "runs = sorted(glob.glob(runs_path))\n",
+    "runs = [os.path.basename(run) for run in runs]\n",
+    "sp = len(runs)//2\n",
+    "runs1 = runs[:sp]\n",
+    "runs1[:5]\n",
+    "\n",
+    "#add by @minfuka\n",
+    "runs2 = runs[sp:]\n",
+    "runs2[:5]\n",
+    "\n",
+    "#add by @minfuka\n",
+    "assert torch.cuda.device_count() == 2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "1b3f2550",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:15.878676Z",
+     "iopub.status.busy": "2025-01-06T06:41:15.878426Z",
+     "iopub.status.idle": "2025-01-06T06:41:15.882248Z",
+     "shell.execute_reply": "2025-01-06T06:41:15.881682Z"
+    },
+    "papermill": {
+     "duration": 0.010185,
+     "end_time": "2025-01-06T06:41:15.883416",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:15.873231",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "particle_names = [\n",
+    "    'apo-ferritin',\n",
+    "    'beta-amylase',\n",
+    "    'beta-galactosidase',\n",
+    "    'ribosome',\n",
+    "    'thyroglobulin',\n",
+    "    'virus-like-particle'\n",
+    "]\n",
+    "\n",
+    "particle_to_index = {\n",
+    "    'apo-ferritin': 0,\n",
+    "    'beta-amylase': 1,\n",
+    "    'beta-galactosidase': 2,\n",
+    "    'ribosome': 3,\n",
+    "    'thyroglobulin': 4,\n",
+    "    'virus-like-particle': 5\n",
+    "}\n",
+    "\n",
+    "index_to_particle = {index: name for name, index in particle_to_index.items()}\n",
+    "\n",
+    "particle_radius = {\n",
+    "    'apo-ferritin': 60,\n",
+    "    'beta-amylase': 65,\n",
+    "    'beta-galactosidase': 90,\n",
+    "    'ribosome': 150,\n",
+    "    'thyroglobulin': 130,\n",
+    "    'virus-like-particle': 135,\n",
+    "}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "f55e24ec",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:15.893258Z",
+     "iopub.status.busy": "2025-01-06T06:41:15.893030Z",
+     "iopub.status.idle": "2025-01-06T06:41:15.910547Z",
+     "shell.execute_reply": "2025-01-06T06:41:15.909750Z"
+    },
+    "papermill": {
+     "duration": 0.02387,
+     "end_time": "2025-01-06T06:41:15.911858",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:15.887988",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# add by @sesasj\n",
+    "class UnionFind:\n",
+    "    def __init__(self, size):\n",
+    "        self.parent = np.arange(size)\n",
+    "        self.rank = np.zeros(size, dtype=int)\n",
+    "\n",
+    "    def find(self, u):\n",
+    "        if self.parent[u] != u:\n",
+    "            self.parent[u] = self.find(self.parent[u])  \n",
+    "        return self.parent[u]\n",
+    "\n",
+    "    def union(self, u, v):\n",
+    "        u_root = self.find(u)\n",
+    "        v_root = self.find(v)\n",
+    "        if u_root == v_root:\n",
+    "            return\n",
+    "            \n",
+    "        if self.rank[u_root] < self.rank[v_root]:\n",
+    "            self.parent[u_root] = v_root\n",
+    "        else:\n",
+    "            self.parent[v_root] = u_root\n",
+    "            if self.rank[u_root] == self.rank[v_root]:\n",
+    "                self.rank[u_root] += 1\n",
+    "\n",
+    "class PredictionAggregator:\n",
+    "    def __init__(self, first_conf=0.2, conf_coef=0.75):\n",
+    "        self.first_conf = first_conf\n",
+    "        self.conf_coef = conf_coef\n",
+    "        self.particle_confs = np.array([0.5, 0.0, 0.2, 0.5, 0.2, 0.5])\n",
+    "        \n",
+    "    def convert_to_8bit(self, volume):\n",
+    "        lower, upper = np.percentile(volume, (0.5, 99.5))\n",
+    "        clipped = np.clip(volume, lower, upper)\n",
+    "        scaled = ((clipped - lower) / (upper - lower + 1e-12) * 255).astype(np.uint8)\n",
+    "        return scaled\n",
+    "\n",
+    "    def make_predictions(self, run_id, model, device_no):\n",
+    "        volume_path = f'/kaggle/input/czii-cryo-et-object-identification/test/static/ExperimentRuns/{run_id}/VoxelSpacing10.000/denoised.zarr'\n",
+    "        volume = zarr.open(volume_path, mode='r')[0]\n",
+    "        volume_8bit = self.convert_to_8bit(volume)\n",
+    "        num_slices = volume_8bit.shape[0]\n",
+    "\n",
+    "        detections = {\n",
+    "            'particle_type': [],\n",
+    "            'confidence': [],\n",
+    "            'x': [],\n",
+    "            'y': [],\n",
+    "            'z': []\n",
+    "        }\n",
+    "\n",
+    "        for slice_idx in range(num_slices):\n",
+    "            \n",
+    "            img = volume_8bit[slice_idx]\n",
+    "            input_image = cv2.resize(np.stack([img]*3, axis=-1), (640, 640))\n",
+    "\n",
+    "            results = model.predict(\n",
+    "                input_image,\n",
+    "                save=False,\n",
+    "                imgsz=640,\n",
+    "                conf=self.first_conf,\n",
+    "                device=device_no,\n",
+    "                batch=1,\n",
+    "                verbose=False,\n",
+    "            )\n",
+    "\n",
+    "            for result in results:\n",
+    "                boxes = result.boxes\n",
+    "                if boxes is None:\n",
+    "                    continue\n",
+    "                cls = boxes.cls.cpu().numpy().astype(int)\n",
+    "                conf = boxes.conf.cpu().numpy()\n",
+    "                xyxy = boxes.xyxy.cpu().numpy()\n",
+    "\n",
+    "                xc = ((xyxy[:, 0] + xyxy[:, 2]) / 2.0) * 10 * (63/64) # 63/64 because of the resize\n",
+    "                yc = ((xyxy[:, 1] + xyxy[:, 3]) / 2.0) * 10 * (63/64)\n",
+    "                zc = np.full(xc.shape, slice_idx * 10 + 5)\n",
+    "\n",
+    "                particle_types = [index_to_particle[c] for c in cls]\n",
+    "\n",
+    "                detections['particle_type'].extend(particle_types)\n",
+    "                detections['confidence'].extend(conf)\n",
+    "                detections['x'].extend(xc)\n",
+    "                detections['y'].extend(yc)\n",
+    "                detections['z'].extend(zc)\n",
+    "\n",
+    "        if not detections['particle_type']:\n",
+    "            return pd.DataFrame()  \n",
+    "\n",
+    "        particle_types = np.array(detections['particle_type'])\n",
+    "        confidences = np.array(detections['confidence'])\n",
+    "        xs = np.array(detections['x'])\n",
+    "        ys = np.array(detections['y'])\n",
+    "        zs = np.array(detections['z'])\n",
+    "\n",
+    "        aggregated_data = []\n",
+    "\n",
+    "        for idx, particle in enumerate(particle_names):\n",
+    "            if particle == 'beta-amylase':\n",
+    "                continue \n",
+    "\n",
+    "            mask = (particle_types == particle)\n",
+    "            if not np.any(mask):\n",
+    "                continue  \n",
+    "                \n",
+    "            particle_confidences = confidences[mask]\n",
+    "            particle_xs = xs[mask]\n",
+    "            particle_ys = ys[mask]\n",
+    "            particle_zs = zs[mask]\n",
+    "            # -------------modified by @sersasj ------------------------\n",
+    "            coords = np.vstack((particle_xs, particle_ys, particle_zs)).T\n",
+    "\n",
+    "           \n",
+    "            z_distance = 20 # How many slices can you \"jump\" to aggregate predictions 10 = 1, 20 = 2...\n",
+    "            xy_distance = 10 # xy_tol_p2 in original code by ITK8191\n",
+    "            \n",
+    "            max_distance = math.sqrt(z_distance**2 + xy_distance**2)\n",
+    "            tree = cKDTree(coords)            \n",
+    "            pairs = tree.query_pairs(r=max_distance, p=2)\n",
+    "\n",
+    "            \n",
+    "            uf = UnionFind(len(coords))\n",
+    "            \n",
+    "            coords_xy = coords[:, :2]\n",
+    "            coords_z = coords[:, 2]\n",
+    "            for u, v in pairs:\n",
+    "                z_diff = abs(coords_z[u] - coords_z[v])\n",
+    "                if z_diff > z_distance:\n",
+    "                    continue  \n",
+    "\n",
+    "                xy_diff = np.linalg.norm(coords_xy[u] - coords_xy[v])\n",
+    "                if xy_diff > xy_distance:\n",
+    "                    continue  \n",
+    "\n",
+    "                uf.union(u, v)\n",
+    "\n",
+    "            roots = np.array([uf.find(i) for i in range(len(coords))])\n",
+    "            unique_roots, inverse_indices, counts = np.unique(roots, return_inverse=True, return_counts=True)\n",
+    "            conf_sums = np.bincount(inverse_indices, weights=particle_confidences)\n",
+    "            \n",
+    "            aggregated_confidences = conf_sums / (counts ** self.conf_coef)\n",
+    "            cluster_per_particle = [2,2,2,2,2,2]\n",
+    "            valid_clusters = (counts >= cluster_per_particle[idx]) & (aggregated_confidences > self.particle_confs[idx])\n",
+    "\n",
+    "            if not np.any(valid_clusters):\n",
+    "                continue  \n",
+    "\n",
+    "            cluster_ids = unique_roots[valid_clusters]\n",
+    "\n",
+    "            centers_x = np.bincount(inverse_indices, weights=particle_xs) / counts\n",
+    "            centers_y = np.bincount(inverse_indices, weights=particle_ys) / counts\n",
+    "            centers_z = np.bincount(inverse_indices, weights=particle_zs) / counts\n",
+    "\n",
+    "            centers_x = centers_x[valid_clusters]\n",
+    "            centers_y = centers_y[valid_clusters]\n",
+    "            centers_z = centers_z[valid_clusters]\n",
+    "\n",
+    "            aggregated_df = pd.DataFrame({\n",
+    "                'experiment': [run_id] * len(centers_x),\n",
+    "                'particle_type': [particle] * len(centers_x),\n",
+    "                'x': centers_x,\n",
+    "                'y': centers_y,\n",
+    "                'z': centers_z\n",
+    "            })\n",
+    "\n",
+    "            aggregated_data.append(aggregated_df)\n",
+    "\n",
+    "        if aggregated_data:\n",
+    "            return pd.concat(aggregated_data, axis=0)\n",
+    "        else:\n",
+    "            return pd.DataFrame()  \n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "fe2c139f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:15.921376Z",
+     "iopub.status.busy": "2025-01-06T06:41:15.921178Z",
+     "iopub.status.idle": "2025-01-06T06:41:43.448403Z",
+     "shell.execute_reply": "2025-01-06T06:41:43.447344Z"
+    },
+    "papermill": {
+     "duration": 27.533745,
+     "end_time": "2025-01-06T06:41:43.450041",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:15.916296",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 1/1 [00:14<00:00, 14.83s/it]\n",
+      "100%|██████████| 2/2 [00:26<00:00, 13.17s/it]\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "estimated total prediction time for 500 runs: 4586.2594 seconds\n"
+     ]
+    }
+   ],
+   "source": [
+    "# instance main class\n",
+    "aggregator = PredictionAggregator(first_conf=0.15,  conf_coef=0.5)\n",
+    "aggregated_results = []\n",
+    "\n",
+    "\n",
+    "#add by @minfuka\n",
+    "from concurrent.futures import ProcessPoolExecutor #add by @minfuka\n",
+    "\n",
+    "#add by @minfuka\n",
+    "def inference(runs, model, device_no):\n",
+    "    subs = []\n",
+    "    for r in tqdm(runs, total=len(runs)):\n",
+    "        df = aggregator.make_predictions(r, model, device_no)\n",
+    "        subs.append(df)\n",
+    "    \n",
+    "    return subs\n",
+    "\n",
+    "\n",
+    "start_time = time.time()\n",
+    "\n",
+    "with ProcessPoolExecutor(max_workers=2) as executor:\n",
+    "    results = list(executor.map(inference, (runs1, runs2), (model, model), (\"0\", \"1\")))\n",
+    "\n",
+    "\n",
+    "end_time = time.time()\n",
+    "\n",
+    "estimated_total_time = (end_time - start_time) / len(runs) * 500  \n",
+    "print(f'estimated total prediction time for 500 runs: {estimated_total_time:.4f} seconds')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "7ef377a5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:43.461434Z",
+     "iopub.status.busy": "2025-01-06T06:41:43.461184Z",
+     "iopub.status.idle": "2025-01-06T06:41:43.467082Z",
+     "shell.execute_reply": "2025-01-06T06:41:43.466475Z"
+    },
+    "papermill": {
+     "duration": 0.012765,
+     "end_time": "2025-01-06T06:41:43.468256",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:43.455491",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#change by @minfuka\n",
+    "submission0 = pd.concat(results[0])\n",
+    "submission1 = pd.concat(results[1])\n",
+    "submission = pd.concat([submission0, submission1]).reset_index(drop=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "4ff1e1db",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-01-06T06:41:43.479019Z",
+     "iopub.status.busy": "2025-01-06T06:41:43.478798Z",
+     "iopub.status.idle": "2025-01-06T06:41:43.507416Z",
+     "shell.execute_reply": "2025-01-06T06:41:43.506704Z"
+    },
+    "papermill": {
+     "duration": 0.03533,
+     "end_time": "2025-01-06T06:41:43.508643",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:43.473313",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>experiment</th>\n",
+       "      <th>particle_type</th>\n",
+       "      <th>x</th>\n",
+       "      <th>y</th>\n",
+       "      <th>z</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>TS_5_4</td>\n",
+       "      <td>apo-ferritin</td>\n",
+       "      <td>5740.622998</td>\n",
+       "      <td>5110.217725</td>\n",
+       "      <td>90.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>TS_5_4</td>\n",
+       "      <td>apo-ferritin</td>\n",
+       "      <td>5874.273600</td>\n",
+       "      <td>5132.325955</td>\n",
+       "      <td>85.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>TS_5_4</td>\n",
+       "      <td>apo-ferritin</td>\n",
+       "      <td>5713.384583</td>\n",
+       "      <td>4996.683655</td>\n",
+       "      <td>120.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>TS_5_4</td>\n",
+       "      <td>apo-ferritin</td>\n",
+       "      <td>5297.355143</td>\n",
+       "      <td>4169.225260</td>\n",
+       "      <td>145.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>TS_5_4</td>\n",
+       "      <td>apo-ferritin</td>\n",
+       "      <td>3993.015666</td>\n",
+       "      <td>1229.446879</td>\n",
+       "      <td>230.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   id experiment particle_type            x            y      z\n",
+       "0   0     TS_5_4  apo-ferritin  5740.622998  5110.217725   90.0\n",
+       "1   1     TS_5_4  apo-ferritin  5874.273600  5132.325955   85.0\n",
+       "2   2     TS_5_4  apo-ferritin  5713.384583  4996.683655  120.0\n",
+       "3   3     TS_5_4  apo-ferritin  5297.355143  4169.225260  145.0\n",
+       "4   4     TS_5_4  apo-ferritin  3993.015666  1229.446879  230.0"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "submission.insert(0, 'id', range(len(submission)))\n",
+    "submission.to_csv(\"submission.csv\", index=False)\n",
+    "submission.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0c2e6bd9",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005092,
+     "end_time": "2025-01-06T06:41:43.519198",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:43.514106",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "edfc5022",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004968,
+     "end_time": "2025-01-06T06:41:43.529111",
+     "exception": false,
+     "start_time": "2025-01-06T06:41:43.524143",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "nvidiaTeslaT4",
+   "dataSources": [
+    {
+     "databundleVersionId": 10033515,
+     "sourceId": 84969,
+     "sourceType": "competition"
+    },
+    {
+     "datasetId": 6040935,
+     "sourceId": 9867543,
+     "sourceType": "datasetVersion"
+    },
+    {
+     "datasetId": 6240616,
+     "sourceId": 10127593,
+     "sourceType": "datasetVersion"
+    },
+    {
+     "sourceId": 211097053,
+     "sourceType": "kernelVersion"
+    }
+   ],
+   "dockerImageVersionId": 30823,
+   "isGpuEnabled": true,
+   "isInternetEnabled": false,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 100.323223,
+   "end_time": "2025-01-06T06:41:45.056413",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2025-01-06T06:40:04.733190",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
